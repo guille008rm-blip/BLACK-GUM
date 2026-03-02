@@ -69,3 +69,6 @@ Visit `http://localhost:3000` for the public site and `http://localhost:3000/adm
 - Update the contact details and WhatsApp number in `src/app/contact/page.tsx`.
 - Rental list filters by category via `?category=camera|lens|audio|lighting|grip|other`.
 - Blog posts show only when `publishedAt` is set and in the past.
+
+## Deploy en Infomaniak (Node.js)
+- Guía completa: `docs/DEPLOY_INFOMANIAK_NODEJS.md`
