@@ -8,7 +8,7 @@ import {
   computePrice,
   createHold,
 } from "@/lib/booking";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { appendBookingRow } from "@/lib/sheets";
 
 export async function POST(request: NextRequest) {
@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
     // ── Create Stripe Checkout Session ───────────────────────────
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://blackgum.studio";
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],

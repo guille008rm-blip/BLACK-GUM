@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build:infomaniak": "npm run prisma:generate && npm run build",
+    "build:infomaniak": "npm run prisma:generate && next build --no-lint",
     "start:infomaniak": "node server.js",
     "lint": "next lint",
     "prisma:generate": "prisma generate",

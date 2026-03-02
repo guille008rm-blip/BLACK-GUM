@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { BOOKING_STATUS } from "@/lib/booking";
 import { appendBookingRow } from "@/lib/sheets";
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
+    const stripe = getStripe();
     const rawBody = await request.text();
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: unknown) {
