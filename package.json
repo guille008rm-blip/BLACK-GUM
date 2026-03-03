@@ -11,7 +11,7 @@
     "build:strict": "next build",
     "start": "next start",
     "postinstall": "node scripts/ensure-db.js",
-    "build:infomaniak": "node scripts/ensure-db.js && npx prisma generate && npx prisma db push --skip-generate && next build --no-lint",
+    "build:infomaniak": "node scripts/ensure-db.js && npx prisma generate && npx prisma db push --skip-generate && next build --no-lint --experimental-build-mode compile",
     "start:infomaniak": "next start -p $PORT",
     "lint": "next lint",
     "prisma:generate": "node scripts/ensure-db.js && npx prisma generate",
