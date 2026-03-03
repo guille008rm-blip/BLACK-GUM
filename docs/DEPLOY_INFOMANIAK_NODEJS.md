@@ -17,7 +17,7 @@ En el Manager de Infomaniak:
 
 ## 2) Configuración recomendada del runtime
 
-- `Node.js version`: `20.x` o superior compatible con Next.js 14.
+- `Node.js version`: `24.x` (repo declares `"engines": { "node": ">=24" }` and `.nvmrc` = 24).
 - `Execution folder`: `/` (raíz del proyecto).
 - `Build command`: `npm ci && npm run build:infomaniak`
 - `Launch command`: `npm run start:infomaniak`

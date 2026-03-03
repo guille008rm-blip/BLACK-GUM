@@ -72,3 +72,19 @@ Visit `http://localhost:3000` for the public site and `http://localhost:3000/adm
 
 ## Deploy en Infomaniak (Node.js)
 - Guía completa: `docs/DEPLOY_INFOMANIAK_NODEJS.md`
+
+### Infomaniak env vars
+
+Set these in the Infomaniak panel (Settings → Environment variables). **Never** hardcode secrets in the repo.
+
+| Variable | Required | Example / Notes |
+|---|---|---|
+| `DATABASE_URL` | **Yes** | `file:./prisma/dev.db` (SQLite) or Postgres URL |
+| `PORT` | Auto | Injected by Infomaniak; do not set manually |
+| `SESSION_SECRET` | **Yes** | Long random string for cookie signing |
+| `ADMIN_EMAIL` | Yes | Admin login email |
+| `ADMIN_PASSWORD` | Yes | Admin login password (initial seed) |
+| `STRIPE_SECRET_KEY` | No | Stripe secret key (leave empty to disable) |
+| `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook secret |
+| `NEXT_PUBLIC_BASE_URL` | Recommended | `https://yourdomain.com` |
+| `ADMIN_BLOCK_SECRET` | No | Secret for admin block endpoint |
