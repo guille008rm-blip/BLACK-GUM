@@ -10,10 +10,11 @@
     "build": "next build --no-lint --experimental-build-mode compile",
     "build:strict": "next build",
     "start": "next start",
-    "build:infomaniak": "npm run prisma:generate && npx prisma db push --skip-generate && npm run build",
+    "build:infomaniak": "npm run prisma:generate && npm run prisma:dbpush:infomaniak && npm run build",
     "start:infomaniak": "next start -p $PORT",
     "lint": "next lint",
     "prisma:generate": "node -e \"const fs=require('fs');const cp=require('child_process');if(fs.existsSync('prisma/schema.prisma')){cp.execSync('prisma generate',{stdio:'inherit'});}else{console.log('Skipping prisma generate (no schema)');}\"",
+    "prisma:dbpush:infomaniak": "node -e \"const cp=require('child_process');const env={...process.env};if(!env.DATABASE_URL){env.DATABASE_URL='file:./dev.db';console.log('DATABASE_URL missing; using file:./dev.db for build');}cp.execSync('npx prisma db push --skip-generate',{stdio:'inherit',env});\"",
     "prisma:migrate": "prisma migrate dev",
     "seed": "prisma db seed"
   },
