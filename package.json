@@ -10,7 +10,7 @@
     "build": "next build --no-lint --experimental-build-mode compile",
     "build:strict": "next build",
     "start": "next start",
-    "build:infomaniak": "node scripts/ensure-db.js && npm run prisma:generate && npx prisma db push --skip-generate && npm run build",
+    "build:infomaniak": "npm run prisma:generate && npx prisma db push --skip-generate && npm run build",
     "start:infomaniak": "next start -p $PORT",
     "lint": "next lint",
     "prisma:generate": "node -e \"const fs=require('fs');const cp=require('child_process');if(fs.existsSync('prisma/schema.prisma')){cp.execSync('prisma generate',{stdio:'inherit'});}else{console.log('Skipping prisma generate (no schema)');}\"",
