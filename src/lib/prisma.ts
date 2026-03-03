@@ -2,28 +2,27 @@
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
-  prismaEnvLogged?: boolean;
+  prismaReady?: boolean;
 };
 
-// Fail-fast: ensure DATABASE_URL is set before Prisma tries to connect
+// ── Env validation (server-only) ────────────────────────────────
+// Prisma needs DATABASE_URL. Fail fast with a clear message.
 if (!process.env.DATABASE_URL) {
-  // During next build, DATABASE_URL may legitimately be absent for static pages.
-  // Only crash hard at runtime (i.e. when the server is actually handling requests).
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "[prisma] DATABASE_URL environment variable is not set. " +
-        "Set it in the Infomaniak panel or as a system env var before starting the app."
+      "[prisma] DATABASE_URL is not set. Configure it in the hosting panel."
     );
   } else {
-    console.warn("[prisma] DATABASE_URL is not set — Prisma queries will fail.");
+    console.warn("[prisma] DATABASE_URL is not set — queries will fail.");
   }
 }
 
-if (process.env.NODE_ENV === "production" && !globalForPrisma.prismaEnvLogged) {
-  console.info("[prisma] DATABASE_URL present ✓");
-  globalForPrisma.prismaEnvLogged = true;
+if (process.env.NODE_ENV === "production" && !globalForPrisma.prismaReady) {
+  console.info("[prisma] ready");
+  globalForPrisma.prismaReady = true;
 }
 
+// ── Singleton PrismaClient ──────────────────────────────────────
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -32,4 +31,19 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+}
+
+// ── Safe query helper ───────────────────────────────────────────
+// Wraps a prisma query so it never crashes the request; returns fallback on error.
+export async function safeQuery<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+  label = "query"
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(`[prisma] ${label} failed:`, error instanceof Error ? error.message : error);
+    return fallback;
+  }
 }

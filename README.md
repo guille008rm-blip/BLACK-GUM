@@ -71,16 +71,26 @@ Visit `http://localhost:3000` for the public site and `http://localhost:3000/adm
 - Blog posts show only when `publishedAt` is set and in the past.
 
 ## Deploy en Infomaniak (Node.js)
-- Guía completa: `docs/DEPLOY_INFOMANIAK_NODEJS.md`
 
-### Infomaniak env vars
+Full guide: `docs/DEPLOY_INFOMANIAK_NODEJS.md`
+
+### Infomaniak configuration
+
+| Setting | Value |
+|---|---|
+| **Node.js version** | 24 (repo enforces `>=24` via `engines` + `.nvmrc`) |
+| **Build command** | `npm ci && npm run build:infomaniak` |
+| **Start command** | `npm run start:infomaniak` |
+| **Branch** | `main` |
+
+### Required environment variables
 
 Set these in the Infomaniak panel (Settings → Environment variables). **Never** hardcode secrets in the repo.
 
 | Variable | Required | Example / Notes |
 |---|---|---|
-| `DATABASE_URL` | **Yes** | `file:./prisma/dev.db` (SQLite) or Postgres URL |
-| `PORT` | Auto | Injected by Infomaniak; do not set manually |
+| `DATABASE_URL` | **Yes** | `file:./dev.db` (SQLite, relative to prisma/) or Postgres URL |
+| `PORT` | Auto | Injected by Infomaniak — do not set manually |
 | `SESSION_SECRET` | **Yes** | Long random string for cookie signing |
 | `ADMIN_EMAIL` | Yes | Admin login email |
 | `ADMIN_PASSWORD` | Yes | Admin login password (initial seed) |

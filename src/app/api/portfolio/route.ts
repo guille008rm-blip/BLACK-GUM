@@ -2,8 +2,13 @@
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "desc" }
-  });
-  return NextResponse.json(projects);
+  try {
+    const projects = await prisma.project.findMany({
+      orderBy: { createdAt: "desc" }
+    });
+    return NextResponse.json(projects);
+  } catch (error) {
+    console.error("[api/portfolio] GET failed:", error instanceof Error ? error.message : error);
+    return NextResponse.json([], { status: 200 });
+  }
 }
