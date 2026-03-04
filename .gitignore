@@ -54,6 +54,8 @@ IMAGENES/VIDEOS/**
 public/videos/full/**
 *.mov
 *.mp4
+# Exception: pack selector videos (needed on deploy)
+!public/paquetes/*.mp4
 
 # Large deploy artifacts
 *.zip
