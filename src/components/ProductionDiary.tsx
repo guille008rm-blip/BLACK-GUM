@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Container from '@/components/ui/Container';
 import Section from '@/components/ui/Section';
 
@@ -44,81 +44,141 @@ const videos: VideoEntry[] = [
   }
 ];
 
+/* ─── Optimised inline styles (lighter glow, GPU-friendly) ─── */
 const styles = `
   @keyframes scaleUp {
-    from {
-      transform: scale(1);
-    }
-    to {
-      transform: scale(1.05);
-    }
+    from { transform: scale(1); }
+    to   { transform: scale(1.05); }
   }
 
   .video-scale-up {
     animation: scaleUp 0.6s ease-out forwards;
+    will-change: transform;
   }
 
   @keyframes borderGlow {
     0%, 100% {
-      box-shadow:
-        0 0 15px 2px rgba(255, 152, 70, 0.8),
-        0 0 30px 5px rgba(255, 152, 70, 0.5);
+      box-shadow: 0 0 14px 2px rgba(255, 152, 70, 0.7);
     }
     50% {
-      box-shadow:
-        0 0 25px 5px rgba(255, 152, 70, 1),
-        0 0 50px 10px rgba(255, 152, 70, 0.7);
+      box-shadow: 0 0 22px 6px rgba(255, 152, 70, 0.85);
     }
   }
 
   .video-playing {
-    animation: borderGlow 4s ease-in-out infinite;
+    animation: borderGlow 3s ease-in-out infinite;
     border: 2px solid rgba(255, 255, 255, 0.9);
+    will-change: box-shadow;
+  }
+
+  /* fade-in for cards entering viewport */
+  .diary-card-hidden {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  .diary-card-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
 `;
 
+/* ─── Throttle helper (avoids rapid re-fires on mouse events) ─── */
+function useThrottledCallback(
+  fn: (base: string) => void,
+  delay: number
+): (base: string) => void {
+  const lastCall = useRef(0);
+  return useCallback(
+    (base: string) => {
+      const now = Date.now();
+      if (now - lastCall.current >= delay) {
+        lastCall.current = now;
+        fn(base);
+      }
+    },
+    [fn, delay]
+  );
+}
+
 export default function ProductionDiary() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
-  const detectionAttempts = useRef<Set<string>>(new Set());
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [visibleCards, setVisibleCards] = useState<Set<string>>(new Set());
 
+  /* ─── Intersection Observer: lazy-load videos only when near viewport ─── */
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const base = entry.target.getAttribute('data-video-base');
+          if (!base) return;
+
+          setVisibleCards((prev) => {
+            const next = new Set(prev);
+            if (entry.isIntersecting) {
+              next.add(base);
+              // Start preloading metadata when card enters viewport
+              const vid = videoRefs.current[base];
+              if (vid && vid.preload === 'none') {
+                vid.preload = 'metadata';
+              }
+            } else {
+              // Pause videos that scroll out of view
+              const vid = videoRefs.current[base];
+              if (vid && !vid.paused) {
+                vid.pause();
+                vid.currentTime = 0;
+              }
+            }
+            return next;
+          });
+        });
+      },
+      { rootMargin: '200px 0px', threshold: 0.1 }
+    );
+
+    Object.values(cardRefs.current).forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  /* ─── Modal open/close: lock scroll & blur header ─── */
   useEffect(() => {
     if (selectedVideo) {
       document.body.style.overflow = 'hidden';
       const header = document.querySelector('header');
-      if (header) {
-        header.style.filter = 'blur(8px)';
-      }
+      if (header) header.style.filter = 'blur(8px)';
     } else {
       document.body.style.overflow = 'auto';
       const header = document.querySelector('header');
-      if (header) {
-        header.style.filter = 'blur(0px)';
-      }
+      if (header) header.style.filter = 'blur(0px)';
     }
-
     return () => {
       document.body.style.overflow = 'auto';
       const header = document.querySelector('header');
-      if (header) {
-        header.style.filter = 'blur(0px)';
-      }
+      if (header) header.style.filter = 'blur(0px)';
     };
   }, [selectedVideo]);
 
-  const handleLoadedMetadata = (base: string, videoElement: HTMLVideoElement) => {
-    if (detectionAttempts.current.has(base)) {
-      return;
+  /* ─── Throttled hover handlers (max 1 per 150 ms) ─── */
+  const handleMouseEnter = useThrottledCallback((base: string) => {
+    const vid = videoRefs.current[base];
+    if (vid && vid.paused) {
+      vid.play().catch(() => {});
     }
+  }, 150);
 
-    if (videoElement && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
-      detectionAttempts.current.add(base);
+  const handleMouseLeave = useCallback((base: string) => {
+    const vid = videoRefs.current[base];
+    if (vid) {
+      vid.pause();
+      vid.currentTime = 0;
     }
-  };
-
-  const handleVideoClick = (base: string) => {
-    setSelectedVideo(base);
-  };
+  }, []);
 
   return (
     <>
@@ -144,48 +204,43 @@ export default function ProductionDiary() {
           </div>
 
           <div className={`flex flex-wrap justify-center gap-6 mb-8 transition-all duration-600 ${selectedVideo ? 'blur-md' : ''}`}>
-            {videos.map((video) => (
+            {videos.map((video, index) => (
               <div
                 key={video.base}
-                className={`group cursor-pointer transition-transform duration-300 hover:scale-105 ${selectedVideo === video.base ? 'video-scale-up' : ''}`}
-                onClick={() => handleVideoClick(video.base)}
-                onMouseEnter={() => {
-                  const videoEl = videoRefs.current[video.base];
-                  if (videoEl) {
-                    videoEl.play();
-                  }
-                }}
-                onMouseLeave={() => {
-                  const videoEl = videoRefs.current[video.base];
-                  if (videoEl) {
-                    videoEl.pause();
-                    videoEl.currentTime = 0;
-                  }
-                }}
+                ref={(el) => { cardRefs.current[video.base] = el; }}
+                data-video-base={video.base}
+                className={`group cursor-pointer transition-transform duration-300 hover:scale-105 ${selectedVideo === video.base ? 'video-scale-up' : ''} ${visibleCards.has(video.base) ? 'diary-card-visible' : 'diary-card-hidden'}`}
+                onClick={() => setSelectedVideo(video.base)}
+                onMouseEnter={() => handleMouseEnter(video.base)}
+                onMouseLeave={() => handleMouseLeave(video.base)}
                 style={{
                   width: '300px',
-                  height: '533px'
+                  height: '533px',
+                  transitionDelay: `${index * 80}ms`
                 }}
               >
                 <div className="relative overflow-hidden rounded-lg video-card-surface border border-white/10 group-hover:border-ember group-hover:shadow-[0_0_20px_rgba(255,152,70,0.6)] transition-all duration-300 w-full h-full">
                   <div className="video-card-inner flex items-center justify-center relative overflow-hidden w-full h-full">
-                    <video
-                      ref={(el) => {
-                        if (el) {
-                          videoRefs.current[video.base] = el;
-                        }
-                      }}
-                      src={`/videos/previews/${video.base}-preview.mp4`}
-                      poster={`/videos/posters/${video.base}.jpg`}
-                      preload="metadata"
-                      onLoadedMetadata={(e) => {
-                        const target = e.target as HTMLVideoElement;
-                        handleLoadedMetadata(video.base, target);
-                      }}
-                      className="w-full h-full object-cover"
-                      muted
-                      playsInline
-                    />
+                    {/* Poster image shown immediately; video rendered only when near viewport */}
+                    {visibleCards.has(video.base) ? (
+                      <video
+                        ref={(el) => { videoRefs.current[video.base] = el; }}
+                        src={`/videos/previews/${video.base}-preview.mp4`}
+                        poster={`/videos/posters/${video.base}.jpg`}
+                        preload="none"
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      /* Lightweight poster placeholder until card enters viewport */
+                      <img
+                        src={`/videos/posters/${video.base}.jpg`}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
 
                     <div className="absolute inset-0 bg-gradient-to-br from-ember/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
@@ -248,7 +303,7 @@ export default function ProductionDiary() {
                       controls
                       autoPlay
                       playsInline
-                      preload="metadata"
+                      preload="auto"
                       className="w-full h-full object-cover"
                     />
                   </div>

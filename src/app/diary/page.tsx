@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import ProductionDiary from "@/components/ProductionDiary";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
+import DiaryLoader from "@/components/DiaryLoader";
+
+const ProductionDiary = dynamic(
+  () => import("@/components/ProductionDiary"),
+  { loading: () => <DiaryLoader /> }
+);
 
 export const metadata: Metadata = {
   title: "Hazlo Realidad | Black Gum",
@@ -9,7 +16,9 @@ export const metadata: Metadata = {
 export default function DiaryPage() {
   return (
     <div className="w-full">
-      <ProductionDiary />
+      <Suspense fallback={<DiaryLoader />}>
+        <ProductionDiary />
+      </Suspense>
     </div>
   );
 }
