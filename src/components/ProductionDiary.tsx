@@ -36,34 +36,36 @@ const styles = `
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* ── Glitch transition ───────────────────────────────────── */
-  @keyframes diary-glitch {
-    0%   { clip-path: inset(0 0 0 0); transform: translate(0); }
-    10%  { clip-path: inset(40% 0 20% 0); transform: translate(-4px, 2px); }
-    20%  { clip-path: inset(10% 0 60% 0); transform: translate(3px, -1px); }
-    30%  { clip-path: inset(70% 0 5% 0); transform: translate(-2px, 3px); }
-    40%  { clip-path: inset(20% 0 40% 0); transform: translate(4px, -2px); }
-    50%  { clip-path: inset(0 0 80% 0); transform: translate(-3px, 1px); }
-    60%  { clip-path: inset(50% 0 10% 0); transform: translate(2px, -3px); }
-    70%  { clip-path: inset(5% 0 50% 0); transform: translate(-1px, 2px); }
-    80%  { clip-path: inset(30% 0 30% 0); transform: translate(3px, 0px); }
-    90%  { clip-path: inset(0 0 0 0); transform: translate(-1px, 1px); }
-    100% { clip-path: inset(0 0 0 0); transform: translate(0); }
-  }
-  @keyframes diary-rgb-shift {
-    0%   { text-shadow: 0 0 0 transparent; filter: none; }
-    15%  { text-shadow: -3px 0 #c7422e, 3px 0 #5ba4cf; filter: saturate(2); }
-    30%  { text-shadow: 2px 0 #c7422e, -2px 0 #5ba4cf; filter: saturate(1.5) brightness(1.3); }
-    50%  { text-shadow: -1px 0 #c7422e, 1px 0 #5ba4cf; filter: saturate(1.2); }
-    70%  { text-shadow: 3px 0 #c7422e, -3px 0 #5ba4cf; filter: hue-rotate(10deg); }
-    100% { text-shadow: 0 0 0 transparent; filter: none; }
+  /* ── Film burn transition ────────────────────────────────── */
+  @keyframes diary-burn-out {
+    0%   { opacity: 1; transform: scale(1); filter: brightness(1) saturate(1) blur(0px); }
+    40%  { opacity: 0.85; transform: scale(1.01); filter: brightness(1.8) saturate(0.4) blur(0px); }
+    70%  { opacity: 0.4; transform: scale(1.03); filter: brightness(2.8) saturate(0) blur(2px); }
+    100% { opacity: 0; transform: scale(1.06); filter: brightness(4) saturate(0) blur(5px); }
   }
 
-  .diary-glitch-out {
-    animation: diary-glitch 0.4s steps(2) forwards, diary-rgb-shift 0.4s ease-out forwards;
+  @keyframes diary-burn-in {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.97); filter: brightness(0.3) saturate(0.2); }
+    35%  { opacity: 0.7; transform: translateY(3px) scale(0.99); filter: brightness(1.2) saturate(0.7); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1) saturate(1); }
   }
-  .diary-glitch-in {
-    animation: diary-glitch 0.35s steps(3) reverse forwards, diary-rgb-shift 0.35s ease-in reverse forwards;
+
+  @keyframes diary-flash-pulse {
+    0%   { opacity: 0; }
+    12%  { opacity: 0.55; }
+    35%  { opacity: 0.2; }
+    60%  { opacity: 0.08; }
+    100% { opacity: 0; }
+  }
+
+  .diary-burn-out {
+    animation: diary-burn-out 0.4s ease-in forwards;
+  }
+  .diary-burn-in {
+    animation: diary-burn-in 0.5s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .diary-flash-active {
+    animation: diary-flash-pulse 0.55s ease-out forwards;
   }
 
   /* ── Scan lines overlay ──────────────────────────────────── */
@@ -98,7 +100,8 @@ const styles = `
 export default function ProductionDiary() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<VideoEntry | null>(null);
-  const [phase, setPhase] = useState<'idle' | 'glitch-out' | 'glitch-in'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'burn-out' | 'burn-in'>('idle');
+  const [showFlash, setShowFlash] = useState(false);
 
   const groups = useMemo(() => groupByProject(videos), []);
   const activeGroup = groups[activeIndex];
@@ -106,15 +109,19 @@ export default function ProductionDiary() {
   const choreographies = ['choreo-cascade','choreo-rise','choreo-zoom','choreo-flip','choreo-drop','choreo-fan','choreo-glitch-in'];
   const choreo = choreographies[activeIndex % choreographies.length];
 
-  /* ── Section navigation with glitch transition ─────────── */
+  /* ── Section navigation with film-burn transition ──────── */
   const navigateTo = useCallback(
     (index: number) => {
       if (index === activeIndex || phase !== 'idle' || index < 0 || index >= groups.length) return;
-      setPhase('glitch-out');
+      setPhase('burn-out');
+      setShowFlash(true);
       setTimeout(() => {
         setActiveIndex(index);
-        setPhase('glitch-in');
-        setTimeout(() => setPhase('idle'), 350);
+        setPhase('burn-in');
+        setTimeout(() => {
+          setPhase('idle');
+          setShowFlash(false);
+        }, 500);
       }, 400);
     },
     [activeIndex, phase, groups.length],
@@ -137,15 +144,21 @@ export default function ProductionDiary() {
 
   /* ── Transition class ──────────────────────────────────── */
   const transitionClass =
-    phase === 'glitch-out'
-      ? 'diary-glitch-out'
-      : phase === 'glitch-in'
-        ? 'diary-glitch-in'
+    phase === 'burn-out'
+      ? 'diary-burn-out'
+      : phase === 'burn-in'
+        ? 'diary-burn-in'
         : '';
 
   return (
     <div className="relative h-screen overflow-hidden bg-ink">
       <style>{styles}</style>
+
+      {/* ── Film burn flash overlay ────────────────────── */}
+      <div
+        className={`fixed inset-0 z-25 pointer-events-none ${showFlash ? 'diary-flash-active' : 'opacity-0'}`}
+        style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(241,169,58,0.5), rgba(245,240,232,0.15) 50%, transparent 75%)' }}
+      />
 
       {/* ── Scan lines (full-screen overlay) ─────────────── */}
       <div className="fixed inset-0 z-20 pointer-events-none diary-scanlines" />

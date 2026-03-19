@@ -74,6 +74,20 @@ export default function ProjectSection({ group, index, total, onSelect }: Projec
 
   return (
     <section ref={containerRef} className="h-full overflow-y-auto relative bg-ink">
+      {/* ── Ambient background video ──────────────────── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <video
+          key={group.videos[0]?.base}
+          src={`/videos/previews/${group.videos[0]?.base}-preview.mp4`}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.07, filter: 'grayscale(1) brightness(0.4) contrast(1.3)' }}
+        />
+      </div>
+
       {/* ── Mesh gradient background ───────────────────── */}
       <div
         className="absolute inset-0 pointer-events-none"
