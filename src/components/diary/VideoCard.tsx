@@ -7,11 +7,9 @@ interface VideoCardProps {
   video: VideoEntry;
   index: number;
   onClick: () => void;
-  /** If used inside masonry layout (different sizing) */
-  masonry?: boolean;
 }
 
-export default function VideoCard({ video, index, onClick, masonry }: VideoCardProps) {
+export default function VideoCard({ video, index, onClick }: VideoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
@@ -21,6 +19,12 @@ export default function VideoCard({ video, index, onClick, masonry }: VideoCardP
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
+
+    // Find nearest scrollable ancestor to use as root
+    let root: Element | null = el.parentElement;
+    while (root && getComputedStyle(root).overflowY !== 'auto' && getComputedStyle(root).overflowY !== 'scroll') {
+      root = root.parentElement;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -36,12 +40,18 @@ export default function VideoCard({ video, index, onClick, masonry }: VideoCardP
           }
         }
       },
-      { rootMargin: '200px 0px', threshold: 0.1 }
+      { root: root || undefined, rootMargin: '200px 0px', threshold: 0.1 }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  /* ── Fallback: ensure visibility even if observer misses ───── */
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 200 + index * 60);
+    return () => clearTimeout(timer);
+  }, [index]);
 
   /* ── Throttled hover handlers ────────────────────────────── */
   const handleMouseEnter = useCallback(() => {
@@ -63,66 +73,40 @@ export default function VideoCard({ video, index, onClick, masonry }: VideoCardP
   /* ── Sizing ──────────────────────────────────────────────── */
   const isVertical = video.aspect === '9:16';
 
-  const cardStyle: React.CSSProperties = masonry
-    ? {
-        width: '100%',
-        aspectRatio: isVertical ? '9 / 16' : '16 / 9',
-      }
-    : {
-        width: isVertical ? 260 : 440,
-        height: isVertical ? 462 : 248,
-        flexShrink: 0,
-      };
-
   return (
     <div
       ref={cardRef}
       data-video-card
-      className={`group cursor-pointer snap-start transition-all duration-300 hover:scale-[1.03] ${
+      className={`group cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
         visible ? 'diary-card-visible' : 'diary-card-hidden'
       }`}
-      style={{
-        ...cardStyle,
-        transitionDelay: `${index * 60}ms`,
-      }}
+      style={{ transitionDelay: `${index * 40}ms` }}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative overflow-hidden rounded-xl video-card-surface border border-white/8 group-hover:border-ember/50 group-hover:shadow-[0_0_24px_rgba(241,169,58,0.25)] transition-all duration-300 w-full h-full">
-        {/* ── Video / poster ───────────────────────────────── */}
+      {/* ── Thumbnail ─────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden rounded-lg border border-white/[0.06] group-hover:border-ember/40 group-hover:shadow-[0_0_16px_rgba(241,169,58,0.15)] transition-all duration-300 w-full"
+        style={{ aspectRatio: isVertical ? '9 / 16' : '16 / 9' }}
+      >
         <video
           ref={videoRef}
-          src={`/videos/previews/${video.base}-preview.mp4`}
-          poster={`/videos/posters/${video.base}.jpg`}
+          src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/previews/${video.base}-preview.mp4`}
+          poster={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/posters/${video.base}.jpg`}
           preload="none"
           muted
           playsInline
           className="w-full h-full object-cover"
         />
 
-        {/* ── Hover gradient overlay ───────────────────────── */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* ── Info on hover ────────────────────────────────── */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <p className="text-[10px] uppercase tracking-[0.15em] text-ember/90 mb-1">
-            {video.project}
-          </p>
-          <p className="text-sm font-semibold text-bone leading-snug line-clamp-2">
-            {video.title}
-          </p>
-        </div>
-
-        {/* ── Play icon ────────────────────────────────────── */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-          <div className="w-12 h-12 rounded-full bg-ink/60 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-            <svg className="w-5 h-5 text-bone ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
       </div>
+
+      {/* ── Title always visible ──────────────────────────── */}
+      <p className="mt-2 text-[11px] md:text-xs text-bone/70 group-hover:text-bone leading-snug line-clamp-2 transition-colors duration-200">
+        {video.title}
+      </p>
     </div>
   );
 }

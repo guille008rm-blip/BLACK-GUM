@@ -53,10 +53,9 @@ next-env.d.ts
 IMAGENES/VIDEOS/**
 *.mov
 
-# IMPORTANT: do NOT globally ignore *.mp4.
-# Some deploy pipelines (including hosted Git builds) may consume .gitignore
-# patterns and drop runtime media assets from the deployed filesystem.
-# Keep ignores scoped to raw source folders only.
+# Video assets — hosted externally on Infomaniak CDN
+# Upload these folders manually: full/, previews/, posters/, diary-loader.*
+public/videos/
 
 # Large deploy artifacts
 *.zip

@@ -1,0 +1,29 @@
+{
+  "name": "blackgum-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Animaciones de vídeo para Black Gum – generadas con Remotion",
+  "scripts": {
+    "studio": "npx remotion studio src/index.ts",
+    "render": "npx remotion render src/index.ts DiaryLoader out/diary-loader.mp4",
+    "render:gif": "npx remotion render src/index.ts DiaryLoader out/diary-loader.gif --image-format png",
+    "render:webm": "npx remotion render src/index.ts DiaryLoader out/diary-loader.webm --codec vp8",
+    "render:all": "npx remotion render src/index.ts",
+    "upgrade": "npx remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.242",
+    "@remotion/player": "4.0.242",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.242"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config": "4.0.242",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.6.3"
+  }
+}

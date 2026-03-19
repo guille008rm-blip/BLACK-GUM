@@ -55,7 +55,7 @@ export default function VideoModal({ video, playlist, onClose, onNavigate }: Vid
       />
 
       {/* ── Modal content ──────────────────────────────────── */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
           className="relative pointer-events-auto flex flex-col items-center"
           onClick={(e) => e.stopPropagation()}
@@ -106,8 +106,8 @@ export default function VideoModal({ video, playlist, onClose, onNavigate }: Vid
           >
             <video
               key={video.base}
-              src={`/videos/full/${video.base}-full.mp4`}
-              poster={`/videos/posters/${video.base}.jpg`}
+              src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/full/${video.base}-full.mp4`}
+              poster={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/posters/${video.base}.jpg`}
               controls
               autoPlay
               playsInline

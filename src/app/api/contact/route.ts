@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-// Configurar transporte de Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASSWORD,
-  },
-});
-
 export async function POST(request: NextRequest) {
   try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPassword = process.env.GMAIL_PASSWORD;
+    const contactRecipient = process.env.CONTACT_TO_EMAIL || 'info@blackgumgroup.com';
+
+    if (!gmailUser || !gmailPassword) {
+      console.error('Error en contacto: credenciales SMTP no configuradas');
+      return NextResponse.json(
+        { error: 'Servicio de correo no configurado' },
+        { status: 500 }
+      );
+    }
+
+    // Configurar transporte de Gmail
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPassword,
+      },
+    });
+
     const body = await request.json();
     const { name, email, projectType, projectSummary, budget } = body;
 
@@ -25,8 +37,8 @@ export async function POST(request: NextRequest) {
 
     // Enviar email a Black Gum
     await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: 'info@blackgumgroup.com',
+      from: gmailUser,
+      to: contactRecipient,
       replyTo: email,
       subject: `Nuevo Proyecto: ${projectType || 'Consulta General'}`,
       html: `
@@ -54,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Enviar confirmación al cliente
     await transporter.sendMail({
-      from: process.env.GMAIL_USER,
+      from: gmailUser,
       to: email,
       subject: 'Hemos recibido tu consulta - Black Gum Studio',
       html: `

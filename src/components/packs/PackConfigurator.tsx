@@ -694,8 +694,10 @@ function ProposalModal({
     notes: ""
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Validate
     if (!formData.name || !formData.email) {
@@ -703,20 +705,76 @@ function ProposalModal({
       return;
     }
 
-    // Here you can send the data to your backend
-    const proposalData = {
-      ...formData,
-      configuration: config,
-      estimatedPrice: pricing.total,
-      timestamp: new Date().toISOString()
-    };
+    setSubmitError("");
+    setIsSubmitting(true);
 
-    setIsSubmitted(true);
-    setTimeout(() => {
-      onClose();
-      setIsSubmitted(false);
-      setFormData({ name: "", email: "", company: "", notes: "" });
-    }, 2000);
+    try {
+      const frequencyLabel =
+        config.deliveryFrequency === "once"
+          ? "única"
+          : config.deliveryFrequency === "weekly"
+          ? "semanal"
+          : config.deliveryFrequency === "biweekly"
+          ? "quincenal"
+          : "mensual";
+
+      const selectedAddOns = CATEGORY_ORDER.flatMap((category) => {
+        const addOnsInCategory =
+          PRICING_CONFIG.addOns[
+            category.id as keyof typeof PRICING_CONFIG.addOns
+          ] as AddOnConfig[];
+
+        return addOnsInCategory
+          .filter((addOn) => Boolean(config.selectedAddOns[addOn.id]))
+          .map((addOn) => {
+            if (!addOn.tiers) return addOn.name;
+
+            const tierId = config.selectedAddOns[`${addOn.id}:tier`] as
+              | string
+              | undefined;
+            const tier = addOn.tiers.find((item) => item.id === tierId);
+            return tier ? `${addOn.name} (${tier.label})` : addOn.name;
+          });
+      });
+
+      const summaryLines = [
+        "Solicitud enviada desde Paquete a la Carta.",
+        `Configuración: ${config.videosCount} vídeos, ${config.videoLength}s, formato ${config.aspectRatio}, entrega ${frequencyLabel}.`,
+        `Add-ons: ${selectedAddOns.length ? selectedAddOns.join(", ") : "ninguno"}.`,
+        `Precio estimado: €${pricing.total.toFixed(2)}.`,
+        formData.company ? `Empresa: ${formData.company}.` : "",
+        formData.notes ? `Notas: ${formData.notes}` : ""
+      ].filter(Boolean);
+
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          projectType: "Paquete a la Carta",
+          projectSummary: summaryLines.join("\n"),
+          budget: `€${pricing.total.toFixed(2)} (estimado)`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo enviar la propuesta");
+      }
+
+      setIsSubmitted(true);
+      setTimeout(() => {
+        onClose();
+        setIsSubmitted(false);
+        setFormData({ name: "", email: "", company: "", notes: "" });
+      }, 2000);
+    } catch {
+      setSubmitError("No se pudo enviar la propuesta. Inténtalo de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -738,6 +796,12 @@ function ProposalModal({
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {submitError && (
+                <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg">
+                  <p className="text-sm text-red-200">{submitError}</p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs uppercase tracking-widest text-fog mb-2">
                   Nombre *
@@ -795,15 +859,17 @@ function ProposalModal({
                 <button
                   type="button"
                   onClick={onClose}
+                  disabled={isSubmitting}
                   className="flex-1 px-4 py-2 border border-ember/30 text-bone rounded-lg hover:bg-ember/10 transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="flex-1 px-4 py-2 bg-ember text-ink font-semibold rounded-lg hover:bg-ember/90 active:scale-95 transition-all"
                 >
-                  Enviar
+                  {isSubmitting ? "Enviando..." : "Enviar"}
                 </button>
               </div>
             </form>

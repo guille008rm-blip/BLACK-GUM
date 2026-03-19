@@ -1,24 +1,51 @@
 'use client';
 
-import Image from 'next/image';
+import { useRef, useCallback } from 'react';
+
+interface DiaryLoaderProps {
+  /** Called when the intro should be dismissed */
+  onDismiss: () => void;
+  /** If true the page is ready — video will end after current playback. If false, video loops. */
+  pageReady: boolean;
+}
 
 /**
- * Animated loader shown while the Diary page assets are loading.
- * Uses the brand logo with a subtle pulse + glow animation.
- * Pure CSS — no external dependencies.
+ * Full-screen intro overlay for the Diary page.
+ * Always plays the Remotion-rendered logo animation.
+ * Loops while the page is loading; plays to end once ready.
  */
-export default function DiaryLoader() {
+export default function DiaryLoader({ onDismiss, pageReady }: DiaryLoaderProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hasPlayedOnce = useRef(false);
+
+  const handleEnded = useCallback(() => {
+    hasPlayedOnce.current = true;
+    if (pageReady) {
+      onDismiss();
+    } else {
+      // Page still loading — loop
+      const vid = videoRef.current;
+      if (vid) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      }
+    }
+  }, [pageReady, onDismiss]);
+
   return (
     <div className="diary-loader">
-      <div className="diary-loader__ring" />
-      <Image
-        src="/brand/logo-white.png"
-        alt="Black Gum"
-        width={80}
-        height={80}
-        priority
-        className="diary-loader__logo"
-      />
+      <video
+        ref={videoRef}
+        className="diary-loader__video"
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onEnded={handleEnded}
+      >
+        <source src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/diary-loader.webm`} type="video/webm" />
+        <source src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/diary-loader.mp4`} type="video/mp4" />
+      </video>
       <style>{loaderStyles}</style>
     </div>
   );
@@ -35,41 +62,9 @@ const loaderStyles = `
     background: #0b0b0b;
   }
 
-  .diary-loader__logo {
-    position: relative;
-    z-index: 2;
-    animation: loaderPulse 1.6s ease-in-out infinite;
-    filter: drop-shadow(0 0 18px rgba(241, 169, 58, 0.5));
-  }
-
-  .diary-loader__ring {
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    border-top-color: #f1a93a;
-    border-right-color: rgba(241, 169, 58, 0.3);
-    animation: loaderSpin 1s linear infinite;
-    z-index: 1;
-  }
-
-  @keyframes loaderPulse {
-    0%, 100% {
-      opacity: 0.7;
-      transform: scale(1);
-      filter: drop-shadow(0 0 12px rgba(241, 169, 58, 0.3));
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.06);
-      filter: drop-shadow(0 0 24px rgba(241, 169, 58, 0.65));
-    }
-  }
-
-  @keyframes loaderSpin {
-    to {
-      transform: rotate(360deg);
-    }
+  .diary-loader__video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
   }
 `;

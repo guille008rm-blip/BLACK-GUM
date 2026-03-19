@@ -22,8 +22,8 @@ export default function DiaryHero({ video }: DiaryHeroProps) {
         <video
           ref={videoRef}
           key={video.base}
-          src={`/videos/full/${video.base}-full.mp4`}
-          poster={`/videos/posters/${video.base}.jpg`}
+          src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/full/${video.base}-full.mp4`}
+          poster={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/posters/${video.base}.jpg`}
           muted
           loop
           playsInline

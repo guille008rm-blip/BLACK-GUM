@@ -102,6 +102,9 @@ export default function ProductionDiary() {
   const [selectedVideo, setSelectedVideo] = useState<VideoEntry | null>(null);
   const [phase, setPhase] = useState<'idle' | 'burn-out' | 'burn-in'>('idle');
   const [showFlash, setShowFlash] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState<number | null>(null);
+
+  const accents = ['#f1a93a', '#5ba4cf', '#6cb87e', '#c7422e', '#9b7fd4', '#d4a055', '#4fc1c1'];
 
   const groups = useMemo(() => groupByProject(videos), []);
   const activeGroup = groups[activeIndex];
@@ -200,21 +203,42 @@ export default function ProductionDiary() {
       )}
 
       {/* ── Bottom project navigation ────────────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-ink/80 backdrop-blur-md border-t border-white/5">
-        <div className="flex items-center justify-center gap-1 md:gap-2 px-4 py-3 overflow-x-auto no-scrollbar max-w-[1920px] mx-auto">
-          {groups.map((g, i) => (
-            <button
-              key={g.slug}
-              onClick={() => navigateTo(i)}
-              className={`shrink-0 px-3 md:px-4 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.12em] rounded-full border transition-all duration-200 ${
-                i === activeIndex
-                  ? 'bg-ember/15 border-ember/40 text-ember font-semibold'
-                  : 'border-transparent text-fog/50 hover:text-bone hover:border-white/10'
-              }`}
-            >
-              {g.name}
-            </button>
-          ))}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/[0.06] transition-all duration-300"
+        style={{
+          background: hoveredNav !== null
+            ? `linear-gradient(180deg, #0b0b0b 0%, color-mix(in srgb, ${accents[hoveredNav % accents.length]} 8%, #0b0b0b) 70%, color-mix(in srgb, ${accents[hoveredNav % accents.length]} 12%, #0b0b0b) 100%)`
+            : 'linear-gradient(180deg, #0b0b0b 0%, #111110 70%, #161411 100%)',
+          borderColor: hoveredNav !== null ? `${accents[hoveredNav % accents.length]}25` : undefined,
+        }}
+        onMouseLeave={() => setHoveredNav(null)}
+      >
+        <div className="flex items-center justify-center gap-1 md:gap-2 px-4 py-1.5 hover:py-3.5 overflow-x-auto no-scrollbar max-w-[1920px] mx-auto transition-all duration-300">
+          {groups.map((g, i) => {
+            const btnAccent = accents[i % accents.length];
+            const isActive = i === activeIndex;
+            const isHovered = i === hoveredNav;
+            return (
+              <button
+                key={g.slug}
+                onClick={() => navigateTo(i)}
+                onMouseEnter={() => setHoveredNav(i)}
+                className={`shrink-0 px-3 md:px-4 py-1 text-[9px] md:text-[11px] uppercase tracking-[0.12em] rounded-full border transition-all duration-200 ${
+                  isActive
+                    ? 'font-semibold'
+                    : 'border-transparent text-fog/50'
+                }`}
+                style={{
+                  color: isActive || isHovered ? btnAccent : undefined,
+                  borderColor: isActive ? `${btnAccent}50` : isHovered ? `${btnAccent}30` : undefined,
+                  backgroundColor: isActive ? `${btnAccent}18` : isHovered ? `${btnAccent}0D` : undefined,
+                  textShadow: isHovered ? `0 0 10px ${btnAccent}40` : undefined,
+                }}
+              >
+                {g.name}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
