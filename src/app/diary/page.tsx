@@ -1,24 +1,15 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
-import DiaryLoader from "@/components/DiaryLoader";
-
-const ProductionDiary = dynamic(
-  () => import("@/components/ProductionDiary"),
-  { loading: () => <DiaryLoader /> }
-);
+import ProductionDiary from "@/components/ProductionDiary";
 
 export const metadata: Metadata = {
-  title: "Hazlo Realidad | Black Gum",
-  description: "Cada cuadro cuenta una historia. Estas son las nuestras."
+  title: "Portfolio | Black Gum",
+  description: "Nuestro trabajo: color, grabación, edición y más. Un vistazo a lo que hacemos.",
 };
 
 export default function DiaryPage() {
   return (
     <div className="w-full">
-      <Suspense fallback={<DiaryLoader />}>
-        <ProductionDiary />
-      </Suspense>
+      <ProductionDiary />
     </div>
   );
 }
