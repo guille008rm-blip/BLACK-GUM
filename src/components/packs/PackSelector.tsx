@@ -91,29 +91,12 @@ export default function PackSelector({ packs, initialKey, onSectionSelect }: Pac
   useEffect(() => {
     if (!centerPack) return;
     
-    // Play center video
-    const centerVideoEl = videoRefsMap.current.get(centerPack.id);
-    if (centerVideoEl && centerPack.videoSrc) {
-      const playVideo = async () => {
-        try {
-          centerVideoEl.currentTime = 0;
-          const playPromise = centerVideoEl.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((error: any) => {
-              console.debug("Video autoplay prevented:", error);
-            });
-          }
-        } catch (error) {
-          console.debug("Video play error:", error);
-        }
-      };
-      const timer = setTimeout(playVideo, 50);
-      return () => clearTimeout(timer);
-    }
-
-    // Pause side videos for performance
+    // Play center video, pause side videos
     videoRefsMap.current.forEach((videoEl, packId) => {
-      if (packId !== centerPack.id && !videoEl.paused) {
+      if (packId === centerPack.id) {
+        videoEl.currentTime = 0;
+        videoEl.play().catch(() => {});
+      } else if (!videoEl.paused) {
         videoEl.pause();
       }
     });
@@ -207,7 +190,7 @@ export default function PackSelector({ packs, initialKey, onSectionSelect }: Pac
           autoPlay
           muted
           playsInline
-          preload="metadata"
+          preload="none"
           poster="/textures/humo-3.jpg"
         >
           <source
@@ -260,6 +243,7 @@ export default function PackSelector({ packs, initialKey, onSectionSelect }: Pac
                     loop
                     muted
                     playsInline
+                    preload="metadata"
                     poster={pack.imageSrc}
                     className="pack-image"
                     style={{ objectFit: "cover", width: "100%", height: "100%", position: "absolute", inset: 0 }}

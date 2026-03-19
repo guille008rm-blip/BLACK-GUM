@@ -76,14 +76,13 @@ export default function ProjectSection({ group, index, total, onSelect }: Projec
     <section ref={containerRef} className="h-full overflow-y-auto relative bg-ink">
       {/* ── Background layers (single sticky container) ── */}
       <div className="sticky top-0 h-screen w-full pointer-events-none overflow-hidden" style={{ marginBottom: '-100vh', zIndex: 0 }}>
-        {/* Ambient video */}
-        <video
+        {/* Ambient poster (static image instead of video — same visual, zero GPU cost) */}
+        <img
           key={group.videos[0]?.base}
-          src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/previews/${group.videos[0]?.base}-preview.mp4`}
-          autoPlay
-          loop
-          muted
-          playsInline
+          src={`${process.env.NEXT_PUBLIC_VIDEO_CDN || '/videos'}/posters/${group.videos[0]?.base}.jpg`}
+          alt=""
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
           style={{ opacity: 0.12, filter: 'grayscale(1) brightness(0.4) contrast(1.3)' }}
         />
@@ -105,6 +104,8 @@ export default function ProjectSection({ group, index, total, onSelect }: Projec
               backgroundColor: accent,
               opacity: 0.10,
               filter: 'blur(1px)',
+              willChange: 'transform',
+              contain: 'strict',
               animation: `diary-float ${p.duration}s ease-in-out ${p.delay}s infinite`,
             }}
           />

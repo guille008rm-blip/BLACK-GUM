@@ -68,32 +68,26 @@ const styles = `
     animation: diary-flash-pulse 0.55s ease-out forwards;
   }
 
-  /* ── Scan lines overlay ──────────────────────────────────── */
-  @keyframes scanline-scroll {
-    0%   { transform: translateY(0); }
-    100% { transform: translateY(4px); }
+  /* ── Scan lines overlay (GPU-composited, no repaint) ───── */
+  .diary-scanlines {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.015) 2px,
+      rgba(255,255,255,0.015) 4px
+    );
+    will-change: transform;
+    contain: strict;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .diary-scanlines {
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.015) 2px,
-        rgba(255,255,255,0.015) 4px
-      );
-      animation: scanline-scroll 0.15s linear infinite;
-    }
-  }
-
-  /* ── Floating particles ──────────────────────────────────── */
+  /* ── Floating particles (GPU-composited) ────────────── */
   @keyframes diary-float {
-    0%   { transform: translate(0, 0) scale(1); opacity: 0.10; }
-    25%  { transform: translate(6px, -12px) scale(1.1); opacity: 0.16; }
-    50%  { transform: translate(-4px, -20px) scale(0.95); opacity: 0.08; }
-    75%  { transform: translate(8px, -10px) scale(1.05); opacity: 0.14; }
-    100% { transform: translate(0, 0) scale(1); opacity: 0.10; }
+    0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.10; }
+    25%  { transform: translate3d(6px, -12px, 0) scale(1.1); opacity: 0.16; }
+    50%  { transform: translate3d(-4px, -20px, 0) scale(0.95); opacity: 0.08; }
+    75%  { transform: translate3d(8px, -10px, 0) scale(1.05); opacity: 0.14; }
+    100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.10; }
   }
 `;
 

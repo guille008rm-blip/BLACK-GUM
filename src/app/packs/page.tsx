@@ -33,7 +33,7 @@ export default async function PacksPage({
       subtitle:
         "Paquetes creativos para campañas ambiciosas y lanzamientos con impacto.",
       image: "/paquetes/pack-campaign.png",
-      video: "/paquetes/pack-campaign.mp4",
+      video: "/paquetes/pack-campaign-opt.mp4",
       tagline: "Lanzamientos con impacto",
       empty: "Sin paquetes de campaña por ahora. Ponte en contacto y crearemos uno juntos."
     },
@@ -43,7 +43,7 @@ export default async function PacksPage({
       subtitle:
         "Paquetes mensuales para mantener tus canales activos con producción consistente.",
       image: "/paquetes/pack-monthly.png",
-      video: "/paquetes/pack-monthly.mp4",
+      video: "/paquetes/pack-monthly-opt.mp4",
       tagline: "Ritmo social mensual",
       empty: "Sin paquetes mensuales listados por ahora. Crearemos un ritmo social para ti."
     },
@@ -52,7 +52,7 @@ export default async function PacksPage({
       title: "A la carta",
       subtitle: "Servicios sueltos listos para combinar según tu necesidad.",
       image: "/paquetes/pack-alacarte.png",
-      video: "/paquetes/pack-alacarte.mp4",
+      video: "/paquetes/pack-alacarte-opt.mp4",
       tagline: "Servicios a medida",
       empty: "Los servicios a la carta aparecerán aquí pronto."
     }

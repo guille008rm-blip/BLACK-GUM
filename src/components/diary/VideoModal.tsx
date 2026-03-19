@@ -111,7 +111,7 @@ export default function VideoModal({ video, playlist, onClose, onNavigate }: Vid
               controls
               autoPlay
               playsInline
-              preload="auto"
+              preload="metadata"
               className="w-full h-full object-cover bg-ink"
             />
           </div>

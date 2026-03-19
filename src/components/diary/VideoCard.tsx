@@ -20,12 +20,6 @@ export default function VideoCard({ video, index, onClick }: VideoCardProps) {
     const el = cardRef.current;
     if (!el) return;
 
-    // Find nearest scrollable ancestor to use as root
-    let root: Element | null = el.parentElement;
-    while (root && getComputedStyle(root).overflowY !== 'auto' && getComputedStyle(root).overflowY !== 'scroll') {
-      root = root.parentElement;
-    }
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -40,18 +34,12 @@ export default function VideoCard({ video, index, onClick }: VideoCardProps) {
           }
         }
       },
-      { root: root || undefined, rootMargin: '200px 0px', threshold: 0.1 }
+      { rootMargin: '200px 0px', threshold: 0.1 }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  /* ── Fallback: ensure visibility even if observer misses ───── */
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 200 + index * 60);
-    return () => clearTimeout(timer);
-  }, [index]);
 
   /* ── Throttled hover handlers ────────────────────────────── */
   const handleMouseEnter = useCallback(() => {
