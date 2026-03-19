@@ -2,12 +2,15 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const requiredFiles = [
+const alwaysRequiredFiles = [
   "public/paquetes/pack-campaign.mp4",
   "public/paquetes/pack-monthly.mp4",
   "public/paquetes/pack-alacarte.mp4",
   "public/textures/humo-3-hq.mp4",
-  "public/textures/humo-3-opt.mp4",
+  "public/textures/humo-3-opt.mp4"
+];
+
+const diaryVideoFiles = [
   "public/videos/previews/ARREGLANDO_HORNO_FRATELLI_PAZZI-preview.mp4",
   "public/videos/previews/EDIT_CRUJIDO_PIZZA_FRATELLI_PAZZI_v2-preview.mp4",
   "public/videos/previews/EDIT_INICIAL_L_FRATELLI_PAZZI_v2-preview.mp4",
@@ -19,6 +22,12 @@ const requiredFiles = [
   "public/videos/full/EDIT_REEL_FRATELLI_PAZZI_PROMO_CABRAMELIZADA_V1-full.mp4",
   "public/videos/full/EDIT_TIMELAPSE_PIZZA_FRATELLI_PAZZI_v2-full.mp4"
 ];
+
+const videoCdn = (process.env.NEXT_PUBLIC_VIDEO_CDN || "").trim();
+const validateDiaryVideosLocally = !videoCdn;
+const requiredFiles = validateDiaryVideosLocally
+  ? [...alwaysRequiredFiles, ...diaryVideoFiles]
+  : alwaysRequiredFiles;
 
 const missing = [];
 const empty = [];
@@ -51,6 +60,10 @@ if (missing.length || empty.length) {
     }
   }
   process.exit(1);
+}
+
+if (!validateDiaryVideosLocally) {
+  console.log(`Diary videos are served from CDN (${videoCdn}); skipped local public/videos checks.`);
 }
 
 console.log(`Media verification passed (${requiredFiles.length} files).`);
