@@ -4,6 +4,8 @@ import Container from "@/components/ui/Container";
 import Section from "@/components/ui/Section";
 import BookingConfirmation from "./BookingConfirmation";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Reserva Recibida",
   description: "Tu pago ha sido recibido. Estamos confirmando tu reserva.",
