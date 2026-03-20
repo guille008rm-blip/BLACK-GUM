@@ -13,7 +13,7 @@
     "verify:media:remote": "node scripts/verify-deployed-media.js",
     "start": "next start",
     "postinstall": "node scripts/ensure-db.js",
-    "build:infomaniak": "node scripts/ensure-db.js && npm run verify:media && prisma generate && prisma db push --skip-generate && NODE_OPTIONS=--max-old-space-size=512 next build --no-lint",
+    "build:infomaniak": "node scripts/ensure-db.js && npm run verify:media && prisma generate && prisma db push --skip-generate && NODE_OPTIONS=--max-old-space-size=1024 next build --no-lint",
     "start:infomaniak": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
     "prisma:generate": "node scripts/ensure-db.js && prisma generate",
