@@ -7,6 +7,8 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { LinkButton } from "@/components/ui/Button";
 import ProcessScroll from "@/components/ProcessScroll";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Producción de Servicio Completo | Black Gum",
   description:

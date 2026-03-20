@@ -4,6 +4,8 @@ import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import ContactForm from "@/components/contact/ContactForm";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Contacto | Inicia tu Proyecto",
   description: "Ponte en contacto con Black Gum Studio para hablar de tu próximo proyecto creativo."

@@ -5,6 +5,8 @@ import Badge from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
 import PremiumRentalCards from "@/components/rentals/PremiumRentalCards";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Alquiler de Equipos | Seleccion Curada",
   description:

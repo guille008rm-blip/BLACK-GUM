@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ProductionDiary from "@/components/ProductionDiary";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Portfolio | Black Gum",
   description: "Nuestro trabajo: color, grabación, edición y más. Un vistazo a lo que hacemos.",
